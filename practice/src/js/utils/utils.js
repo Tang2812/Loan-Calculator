@@ -1,8 +1,11 @@
-import * as XLSX from 'xlsx';
 import ExcelJS from 'exceljs';
 import { saveAs } from 'file-saver';
+import { LoanPaymentModel } from '../models/loan_payment_model';
 export class Ultil {
-  // get date today
+  /**
+   *function to get date today by format dd/MM/YYY
+   * @returns today
+   */
   static getDayToDay() {
     const date = new Date();
     const options = { day: '2-digit', month: '2-digit', year: 'numeric' }
@@ -10,25 +13,43 @@ export class Ultil {
     return result;
   }
 
-  // function check leap year
+  /**
+   *function check year input is a leap year
+   * @param {Number} year
+   * @returns
+   */
   static isLeapYear(year) {
     return (year % 4 === 0 && year % 100 !== 0) || (year % 400 === 0);
   }
 
-  // function calculate number of date in a month
+  /**
+   *function calculate number of date in a month
+   * @param {Number} month
+   * @param {Number} year
+   * @returns {Number} Dates of month
+   */
   static getDaysInMonth(month, year) {
     const DATES_OF_MONTH = [31, (this.isLeapYear(year) ? 29 : 28), 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
     return DATES_OF_MONTH[month - 1];  /*DATES_OF_MONTH start from index 0*/
   }
 
-  // function format number to english
+  // function format number
+  /**
+   * function reformat value by format VN number
+   * @param {Number} value
+   * @returns value by format VN number
+   */
   static reformater(value) {
     if (!isNaN(value) && value !== '') {
       return Number(value).toLocaleString('vi-VN');
     };
   }
 
-  // function check NAN value
+  /**
+   *function check NAN value
+   * @param {*} value
+   * @returns 0 if value is not a number or reformated number if value is a number
+   */
   static checkIfNAN(value) {
     if (!isNaN(value)) {
       value = this.reformater(Math.round(value))
@@ -38,7 +59,11 @@ export class Ultil {
     return value
   }
 
-  // function check is date in past
+  /**
+   *function check is date in past
+   * @param {String} a Date to check is it in past
+   * @returns true if the date entered is older than today else return false
+   */
   static isDateInPast(valueOfDisbursementDate) {
     const currentDate = this.getDayToDay().split('/').map(Number);
     const inputDate = valueOfDisbursementDate.split('/').map(Number);
@@ -50,7 +75,13 @@ export class Ultil {
     return input < current;
   }
 
-  // function check date in pass
+
+  /**
+   *function push date error message to errors
+   * @param {String} date
+   * @param {[]} a array conatain error messages
+   * push error message of date if date in pass
+   */
   static checkDateInPass(date, inputErrors) {
     if (this.isDateInPast(date)) {
       inputErrors.inputStatus = false;
@@ -60,7 +91,12 @@ export class Ultil {
     }
   }
 
-  // function check value greater than 0 or is a number
+  /**
+   *function check value greater than 0 or is a number and push error message
+   * @param {Number} value
+   * @param {[]} array contain errors
+   * @param {String} title of error
+   */
   static checkValueGreaterThan0(value, inputErrors, string) {
     if (value < 0 || isNaN(value)) {
       inputErrors.inputStatus = false;
@@ -71,7 +107,12 @@ export class Ultil {
     };
   }
 
-  // function caculate repayment date per month
+
+  /**
+   *function caculate repayment date per month
+   * @param {String} date Disbursement date
+   * @returns this day next month
+   */
   static calculateRepaymentDate(date) {
     const [day, month, year] = date.split('/').map(Number);
     const DAYS_OF_MONTH = Ultil.getDaysInMonth(month, year);
@@ -96,6 +137,53 @@ export class Ultil {
     return newDate;
   }
 
+  static createResultRecord(origin, remainingOriginalAmount, interest, repaymentPeriod, totalPayable) {
+    return LoanPaymentModel.createResultRecord(origin, remainingOriginalAmount, interest, repaymentPeriod, totalPayable);
+  }
+
+  /**
+   * function calculate remaining amount
+   * @param {Number} remainingAmount
+   * @param {Number} origin
+   * @returns remaining amount per month
+   */
+  static calculateRemainingAmount(remainingAmount, origin) {
+    return Math.max(remainingAmount - origin, 0);
+  }
+
+  static calculateSingleTermLoan(object, result, remainingOriginalAmount, repaymentPeriod) {
+    const interest = object.calculateInterest(remainingOriginalAmount, object.interestRate);
+    const totalInterestPayable = remainingOriginalAmount + interest;
+    result.push(this.createResultRecord(remainingOriginalAmount, remainingOriginalAmount, interest, repaymentPeriod, totalInterestPayable));
+    return totalInterestPayable;
+  }
+
+  static calculateMultiTermLoan(object, result, remainingOriginalAmount, repaymentPeriod) {
+    let totalInterestPayable = 0;
+    let minMonthlyPayment = remainingOriginalAmount;
+    let maxMonthlyPayment = 0;
+    const origin = remainingOriginalAmount / object.loanTerm;
+
+    for (let i = 1; i <= object.loanTerm; i++) {
+      const interest = object.calculateInterest(remainingOriginalAmount, object.interestRate);
+      remainingOriginalAmount = this.calculateRemainingAmount(remainingOriginalAmount, origin);
+      repaymentPeriod = Ultil.calculateRepaymentDate(repaymentPeriod);
+      const totalPayable = origin + interest;
+      totalInterestPayable += totalPayable;
+
+      result.push(this.createResultRecord(origin, remainingOriginalAmount, interest, repaymentPeriod, totalPayable));
+
+      minMonthlyPayment = Math.min(minMonthlyPayment, totalPayable);
+      maxMonthlyPayment = Math.max(maxMonthlyPayment, totalPayable);
+    }
+
+    return { totalInterestPayable, minMonthlyPayment, maxMonthlyPayment };
+  }
+
+  /**
+   * function export data to file xlsx
+   * get data from local storage, change to xlsx and dowload to user device
+   */
   static exportToXLSX() {
     //Get data from local storage, change to json
     const result = JSON.parse(localStorage.getItem('result'));

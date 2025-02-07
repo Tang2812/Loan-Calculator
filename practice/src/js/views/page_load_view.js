@@ -17,11 +17,14 @@ export const PageLoadView = {
 
   // call reformat number from controller
   reformatNumber: function () {
-    PageLoadController.reformatNumber('#property-value');
-    PageLoadController.reformatNumber('#loan-amount');
+    this.reformatNumberToVietNameseNumberFormat('#property-value');
+    this.reformatNumberToVietNameseNumberFormat('#loan-amount');
   },
 
-  // change value of slider
+
+  /**
+   * function change value when pull or change slider
+   */
   changeValuesWhenSliderChange: function () {
     const slider = document.querySelector('#slider');
     const sliderValue = document.querySelector('#sliderValue');
@@ -33,8 +36,9 @@ export const PageLoadView = {
     });
   },
 
-
-  // change loan amount when input property value
+  /**
+   * function change loan amount when input property value, loan amout = 0 if loan amout is NaN
+   */
   changeLoanAmountWhenInputProperty: function () {
     const propertyValueBox = document.querySelector('#property-value');
     const slider = document.querySelector('#slider');
@@ -43,11 +47,15 @@ export const PageLoadView = {
       const propertyValue = Number(document.querySelector('#property-value').value.replace(/\./g, ''));
       const loanAmount = document.querySelector('#loan-amount');
       sliderValue.textContent = slider.value + '%';
-      loanAmount.value = PageLoadController.calculateLoanAmountByLoanRate(slider.value, propertyValue, loanAmount);
+      const loanAmountValue = PageLoadController.calculateLoanAmountByLoanRate(slider.value, propertyValue, loanAmount);
+      loanAmount.value = Number.isNaN(loanAmountValue) ? 0 : loanAmountValue;
+
     });
   },
 
-  // get date today
+  /**
+   * get date today and set to input box
+   */
   getDate: function () {
     const inputBox = document.querySelector('#datepicker');
     const today = PageLoadController.getDayToDay();
@@ -55,7 +63,30 @@ export const PageLoadView = {
   },
 
 
-  //caculate Loan rate by loan amount
+  /**
+   *function reformat number by VN number format in input box
+   * @param {String} idElement name, id, class of input box
+   */
+  reformatNumberToVietNameseNumberFormat: function (idElement) {
+    document.addEventListener('DOMContentLoaded', () => {
+      const numberInput = document.querySelector(idElement);
+
+      numberInput.addEventListener('input', (e) => {
+        let value = e.target.value;
+        value = value.replace(/\./g, '');
+        if (!isNaN(value) && value !== '') {
+          value = Number(value).toLocaleString('vi-VN');
+        };
+        e.target.value = value;
+      })
+
+    })
+  },
+
+  /**
+   *function caculate Loan rate by loan amount
+   * @param {*} inputEvent
+   */
   calculateLoanRateByLoanAmount: function (inputEvent) {
     const sliderValue = document.querySelector('#sliderValue');
     const loanRate = document.querySelector('#slider');
@@ -77,7 +108,9 @@ export const PageLoadView = {
 
   },
 
-  //change Loan rate by Loan amount
+  /**
+   * function change Loan rate by Loan amount when input loan amount
+   */
   changeLoanRateByLoanAmount: function () {
     const loanAmount = document.querySelector('#loan-amount');
 
@@ -87,7 +120,9 @@ export const PageLoadView = {
 
   },
 
-  // open and close modal
+  /**
+   * function open and close modal when click button
+   */
   openCloseModal: function () {
     const buttonExports = document.querySelectorAll('#button-export');
     buttonExports.forEach(buttonExport => {
@@ -99,7 +134,9 @@ export const PageLoadView = {
 
   },
 
-  // active button left (decreasing balance sheet)
+  /**
+   * function open decreasing balance  when click button button #btn-decreasing-balance
+   */
   activeButtonLeft: function () {
     const button = document.querySelector("#btn-decreasing-balance");
     const INDEX_OF_BUTTON = 0;
@@ -111,7 +148,9 @@ export const PageLoadView = {
     });
   },
 
-  // active button left (decreasing balance sheet)
+  /**
+ * function open decreasing balance sheet when click button button #btn-decreasing-balance-shee
+ */
   activeButtonRight: function () {
     const button = document.querySelector("#btn-decreasing-balance-sheet");
     const INDEX_OF_BUTTON = 1;

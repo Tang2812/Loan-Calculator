@@ -6,22 +6,6 @@ export const PageLoadController = {
     PageLoadView.init();
   },
 
-  // reformat number input
-  reformatNumber: function (idElement) {
-    document.addEventListener('DOMContentLoaded', () => {
-      const number_input = document.querySelector(idElement);
-
-      number_input.addEventListener('input', (e) => {
-        let value = e.target.value;
-        value = value.replace(/\./g, '');
-        if (!isNaN(value) && value !== '') {
-          value = Number(value).toLocaleString('vi-VN');
-        };
-        e.target.value = value;
-      })
-
-    })
-  },
 
   // change value of Loan amount
   calculateLoanAmountByLoanRate: function (loanRate, propertyValue, loanAmount) {
