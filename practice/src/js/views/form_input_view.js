@@ -1,40 +1,70 @@
 import FormInputController from "../controllers/form_input_controller";
 import { Ultil } from "../utils/utils";
+
+const propertyValue = document.querySelector('#property-value');
+const loanAmount = document.querySelector('#loan-amount');
+const loanTerm = document.querySelector('#loan-term');
+const interestRate = document.querySelector('#interest-rate');
+const disbursementDate = document.querySelector('#datepicker');
+const inputBoxs = document.querySelectorAll('.input-box');
+const slider = document.querySelector('#slider');
+const totaInterestPaypleText = document.querySelector("#total-interest-payable");
+const minMonthlyPaymentText = document.querySelector("#monthly-payment-min-amount");
+const maxMonthlyPaymentText = document.querySelector("#monthly-payment-max-amount");
+const totalOriginText = document.querySelector('#total-origin');
+const totalInterestText = document.querySelector('#total-interest');
+const totalPaymentText = document.querySelector('#total-payment');
+const monthlyPaymentAmountTex = document.querySelector('#monthly-payment-amount');
+const totalInterestPayableText = document.querySelector('#total-money-payable')
+const propertyValueError = document.querySelector('#property-error');
+const loanAmountError = document.querySelector('#loan-amount-error');
+const loanTermError = document.querySelector('#loan-term-error');
+const interestRateError = document.querySelector('#interest-rate-error');
+const disbursementDateError = document.querySelector('#date-time-error');
+const INDEX_OF_PROPERTYVALUE_ERRMESSAGE = 0;
+const INDEX_OF_LOANAMOUNT_ERRMESSAGE = 1;
+const INDEX_OF_LOANTERM_ERRMESSAGE = 2;
+const INDEX_OF_INTERSTERATE_ERRMESSAGE = 3;
+const INDEX_OF_DISBURSEMENTDATE_ERRMESSAGE = 4;
 export const FormInputView = {
 
   init: function () {
     this.getValueWhenUserInput();
   },
 
-  // get element when user iput
+  /**
+   *function get value when user input to input box
+   */
   getValueWhenUserInput: function () {
-    const propertyValue = document.querySelector('#property-value');
-    const loanAmount = document.querySelector('#loan-amount');
-    const loanTerm = document.querySelector('#loan-term');
-    const interestRate = document.querySelector('#interest-rate');
-    const disbursementDate = document.querySelector('#datepicker');
-    const inputBoxs = document.querySelectorAll('.input-box');
-    const slider = document.querySelector('#slider');
-
-    // get value when user input to input box
     inputBoxs.forEach(input => {
       input.addEventListener('input', () => {
         this.getValue(propertyValue, loanAmount, loanTerm, interestRate, disbursementDate);
       })
     });
 
-    // get value when user change slider
+    /**
+     *function get user when user chang value of slider
+     */
     slider.addEventListener('input', () => {
       this.getValue(propertyValue, loanAmount, loanTerm, interestRate, disbursementDate);
     })
 
-    // get value when user choose date
+    /**
+     * function get value when user choose date
+     */
     disbursementDate.addEventListener('change', () => {
       this.getValue(propertyValue, loanAmount, loanTerm, interestRate, disbursementDate);
     });
   },
 
-  // Get value from input boxes
+  /**
+   * function get value, validate and handle value
+   * @param {*} propertyValue
+   * @param {*} loanAmount
+   * @param {*} loanTerm
+   * @param {*} interestRate
+   * @param {*} disbursementDate
+   */
   getValue: function (propertyValue, loanAmount, loanTerm, interestRate, disbursementDate) {
     const valueOfPropertyValue = Number(propertyValue.value.replace(/\./g, ''));
     const valueOfLoanAmount = Number(loanAmount.value.replace(/\./g, ''));
@@ -54,19 +84,11 @@ export const FormInputView = {
     }
   },
 
-  // Set errors to labels
+  /**
+   * function set error message to view
+   * @param {} errorsAndMessages an object of errors and error messages
+   */
   setMessageErrorToView: function (errorsAndMessages) {
-    const propertyValueError = document.querySelector('#property-error');
-    const loanAmountError = document.querySelector('#loan-amount-error');
-    const loanTermError = document.querySelector('#loan-term-error');
-    const interestRateError = document.querySelector('#interest-rate-error');
-    const disbursementDateError = document.querySelector('#date-time-error');
-    const INDEX_OF_PROPERTYVALUE_ERRMESSAGE = 0;
-    const INDEX_OF_LOANAMOUNT_ERRMESSAGE = 1;
-    const INDEX_OF_LOANTERM_ERRMESSAGE = 2;
-    const INDEX_OF_INTERSTERATE_ERRMESSAGE = 3;
-    const INDEX_OF_DISBURSEMENTDATE_ERRMESSAGE = 4;
-
     // set message to error label
     propertyValueError.textContent = errorsAndMessages.errorMessages[INDEX_OF_PROPERTYVALUE_ERRMESSAGE];
     loanAmountError.textContent = errorsAndMessages.errorMessages[INDEX_OF_LOANAMOUNT_ERRMESSAGE];
@@ -75,7 +97,15 @@ export const FormInputView = {
     disbursementDateError.textContent = errorsAndMessages.errorMessages[INDEX_OF_DISBURSEMENTDATE_ERRMESSAGE];
   },
 
-  // set value of table result and Modal
+  /**
+   * set value of table result and Modal
+   * @param {*} totaInterestPayple
+   * @param {*} minMonthlyPayment
+   * @param {*} maxMonthlyPayment
+   * @param {*} totalInterest
+   * @param {*} totalOrigin
+   * @param {*} result
+   */
   setValueOfTableResultAndModal: function (totaInterestPayple, minMonthlyPayment, maxMonthlyPayment, totalInterest, totalOrigin, result) {
 
     // set result to table result
@@ -89,11 +119,22 @@ export const FormInputView = {
     this.setValueOfMonthlyPaymentTable(monthlyPaymentAmount, totalInterestPayable);
   },
 
+  /**
+   * reformat value of element by reformater or 0 if value is NaN
+   * @param {*} element
+   * @param {*} value
+   */
   updateTextContent: function (element, value) {
     element.textContent = !isNaN(value) ? Ultil.reformater(Math.round(value)) : '0';
   },
 
   // function to set value to row of table result
+  /**
+   * set result record after calculate to row of table result
+   * @param {*} modalTable
+   * @param {*} item
+   * @param {*} number
+   */
   setValueToTableRow: function (modalTable, item, number) {
 
     const ORDINAL_ROW = 0;
@@ -127,7 +168,9 @@ export const FormInputView = {
 
   },
 
-  // set value of modal
+  /**
+   * set value of result to modal contain table result
+   */
   isEventAttached: false,
   setValueOfModal: function (result) {
     const modalTable = document.querySelector('#modal-table-result').getElementsByTagName('tbody')[0];
@@ -151,28 +194,31 @@ export const FormInputView = {
     }
   },
 
+  /**
+   * set totalInterest, totaInterestPayple, totalOrigin, minMonthlyPayment, maxMonthlyPayment to Decreasing balance sheet
+   * @param {*} totalInterest
+   * @param {*} totaInterestPayple
+   * @param {*} totalOrigin
+   * @param {*} minMonthlyPayment
+   * @param {*} maxMonthlyPayment
+   */
   setValueToTableResult: function (totalInterest, totaInterestPayple, totalOrigin, minMonthlyPayment, maxMonthlyPayment) {
-    const totaInterestPaypleText = document.querySelector("#total-interest-payable");
-    const minMonthlyPaymentText = document.querySelector("#monthly-payment-min-amount");
-    const maxMonthlyPaymentText = document.querySelector("#monthly-payment-max-amount");
-    const totalOriginText = document.querySelector('#total-origin');
-    const totalInterestText = document.querySelector('#total-interest');
-    const totalPaymentText = document.querySelector('#total-payment');
-
     // set value to table result
-    totalInterestText.textContent = `${totalInterest}`;
-    totalPaymentText.textContent = `${totaInterestPayple}`;
-    totalOriginText.textContent = `${totalOrigin}`;
+    totalInterestText.textContent = totalInterest;
+    totalPaymentText.textContent = totaInterestPayple;
+    totalOriginText.textContent = totalOrigin;
     totaInterestPaypleText.textContent = `${totaInterestPayple} VND`;
     minMonthlyPaymentText.textContent = `${minMonthlyPayment} VND`;
     maxMonthlyPaymentText.textContent = `${maxMonthlyPayment} VND`;
   },
 
-  // set value of monthly payment result
+  //
+  /**
+   * set value of monthly payment amount, total Interest Payable to table of fixed monthly payment
+   * @param {*} monthlyPaymentAmount
+   * @param {*} totalInterestPayable
+   */
   setValueOfMonthlyPaymentTable: function (monthlyPaymentAmount, totalInterestPayable) {
-    const monthlyPaymentAmountTex = document.querySelector('#monthly-payment-amount');
-    const totalInterestPayableText = document.querySelector('#total-money-payable')
-
     monthlyPaymentAmountTex.textContent = `${monthlyPaymentAmount} VND`;
     totalInterestPayableText.textContent = `${totalInterestPayable} VND`;
   },

@@ -1,51 +1,52 @@
-
 import { LoanModel } from '../models/loan_model';
-import { LoanPaymentModel } from '../models/loan_payment_model';
 import { Ultil } from '../utils/utils';
 import { FormInputView } from '../views/form_input_view';
-import { PageLoadController } from './page_load_controller';
 const FormInputController = {
   innit: function () {
     FormInputView.init();
   },
 
   // calculate Loan payment
+  /**
+   * calculate loan payment, return array result of payment per month and total interest payable,
+   * min monthly payment and max monthly payment
+   * @param {LoanModel} object
+
+   */
   calculateLoanPayment: function (object) {
     let result = [];
     let remainingOriginalAmount = object.loanAmount;
-    let totalInterestPayable = 0;
-    let minMonthlyPayment = remainingOriginalAmount;
-    let maxMonthlyPayment = 0;
     let repaymentPeriod = object.disbursementDate;
 
     if (object.loanTerm < 2) {
-      const interest = object.calculateInterest(remainingOriginalAmount, object.interestRate);
-      totalInterestPayable = remainingOriginalAmount + interest;
-      result.push(LoanPaymentModel.createResultRecord(remainingOriginalAmount, remainingOriginalAmount, interest, repaymentPeriod, totalInterestPayable));
+      const totalInterestPayable = Ultil.calculateSingleTermLoan(object, result, remainingOriginalAmount, repaymentPeriod);
+      return {
+        result,
+        totalInterestPayable,
+        minMonthlyPayment: remainingOriginalAmount,
+        maxMonthlyPayment: totalInterestPayable
+      };
     } else {
-      const origin = remainingOriginalAmount / object.loanTerm;
-      for (let i = 1; i <= object.loanTerm; i++) {
-        const interest = object.calculateInterest(remainingOriginalAmount, object.interestRate);
-        remainingOriginalAmount = Math.max(remainingOriginalAmount - origin, 0);
-        repaymentPeriod = Ultil.calculateRepaymentDate(repaymentPeriod);
-        const totalPayable = origin + interest;
-        totalInterestPayable += totalPayable;
-
-        result.push(LoanPaymentModel.createResultRecord(origin, remainingOriginalAmount, interest, repaymentPeriod, totalPayable));
-
-        minMonthlyPayment = Math.min(minMonthlyPayment, totalPayable);
-        maxMonthlyPayment = Math.max(maxMonthlyPayment, totalPayable);
-      }
+      const { totalInterestPayable, minMonthlyPayment, maxMonthlyPayment } = Ultil.calculateMultiTermLoan(object, result, remainingOriginalAmount, repaymentPeriod);
+      return {
+        result,
+        totalInterestPayable,
+        minMonthlyPayment,
+        maxMonthlyPayment
+      };
     }
-    return {
-      result,
-      totalInterestPayable,
-      minMonthlyPayment,
-      maxMonthlyPayment
-    };
   },
 
+
   // handle Loan Value
+  /**
+   * function handle loan value, calculate and save loan payment result to localstorage
+   * @param {*} propertyValue
+   * @param {*} loanAmount
+   * @param {*} loanTerm
+   * @param {*} interestRate
+   * @param {*} disbursementDate
+   */
   handleLoanValue: function (propertyValue, loanAmount, loanTerm, interestRate, disbursementDate) {
     const object = new LoanModel(propertyValue, loanAmount, loanTerm, interestRate, disbursementDate);
     const { result, totalInterestPayable, minMonthlyPayment, maxMonthlyPayment } = this.calculateLoanPayment(object);
